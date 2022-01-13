@@ -1,6 +1,6 @@
 
 library(tidyverse)
-
+library(magrittr)
 library(electionsBR)
 
 # Set timeout limit to 10 minutes due to data download from TSE's repo
@@ -19,8 +19,21 @@ elec_2020 <- saveRDS(elec_2020, file = "elec_2020.rds")
 
 # Import saved files
 
-elec_2016 <- read_rds(elec_2016, file = "elec_2016.rds")
-elec_2020 <- read_rds(elec_2020, file = "elec_2020.rds")
+elec_2016 <- read_rds(file = "elec_2016.rds")
+elec_2020 <- read_rds(file = "elec_2020.rds")
 
-# Cleaning data...
+elec_2016 <- elec_2016[, names(elec_2016) != "NR_PROTOCOLO_CANDIDATURA"]
+elec_2020 <- elec_2020[, names(elec_2020) != "NR_PROTOCOLO_CANDIDATURA"]
+
+# Data transformations...
+
+data <- bind_rows(elec_2016, elec_2020)
+
+data %<>% 
+  filter(NM_UE == "RIO DE JANEIRO" & CD_CARGO == 13) %>%
+  select(ANO_ELEICAO, NR_CPF_CANDIDATO, SG_PARTIDO)
+
+data_wide <- data %>% 
+  pivot_wider(names_from = ANO_ELEICAO, values_from = SG_PARTIDO, names_prefix = "SG_PARTIDO_") %>%
+  filter(SG_PARTIDO_2016 == SG_PARTIDO_2020)
 
